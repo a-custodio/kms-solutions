@@ -19,15 +19,18 @@ import hashlib
 import sys
 from pathlib import Path
 
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
 from google.cloud import kms_v1
+
 
 KMS_MAX_DATA_BYTES = 65536
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Sign a document with a Cloud KMS "
-                    "post-quantum key (ML-DSA-65)."
+        description="Sign a document with a Cloud KMS using "
+                    "post-quantum key."
     )
     parser.add_argument(
         "--project", required=True, help="Google Cloud project ID"
@@ -36,18 +39,12 @@ def parse_args() -> argparse.Namespace:
         "--location", required=True,
         help="KMS key ring location (e.g. us-east1)"
     )
+    parser.add_argument("--keyring", required=True, help="KMS key ring name")
+    parser.add_argument("--key", required=True, help="KMS crypto key name")
     parser.add_argument(
-        "--keyring", required=True, help="KMS key ring name"
+        "--input", required=True, help="Path to the original document"
     )
-    parser.add_argument(
-        "--key", required=True, help="KMS crypto key name"
-    )
-    parser.add_argument(
-        "--input", required=True, help="Path to the document to sign"
-    )
-    parser.add_argument(
-        "--output", required=True, help="Path to save the .sig file"
-    )
+    parser.add_argument("--sig", required=True, help="Path to the .sig file")
     return parser.parse_args()
 
 
@@ -92,13 +89,11 @@ def get_enabled_key_version(
 
 def prepare_payload(content: bytes) -> tuple[bytes, bool]:
     """
-    Return the payload to send to KMS and whether it is a digest.
+    Mirror of sign.py's prepare_payload — must always return the same bytes
+    that were sent to KMS during signing.
 
-    - Files <= 65536 bytes : send raw content directly.
-    - Files  > 65536 bytes : send SHA-512 digest (64 bytes) of the content.
-
-    The verify.py counterpart must apply the same logic so both sides
-    always agree on what was signed.
+    - Files <= 65536 bytes : raw content.
+    - Files  > 65536 bytes : SHA-512 digest (64 bytes).
     """
     if len(content) <= KMS_MAX_DATA_BYTES:
         return content, False
@@ -106,20 +101,23 @@ def prepare_payload(content: bytes) -> tuple[bytes, bool]:
     digest = hashlib.sha512(content).digest()
     print(
         f"[INFO] File exceeds {KMS_MAX_DATA_BYTES} bytes — "
-        f"signing SHA-512 digest ({len(digest)} bytes) instead of raw content."
+        f"verifying against SHA-512 digest ({len(digest)} bytes)."
     )
     return digest, True
 
 
-def sign_document(
+def verify_document(
     project_id: str,
     location: str,
     keyring_name: str,
     key_name: str,
     input_path: str,
-    output_path: str,
+    sig_path: str,
 ) -> None:
-    """Sign a document using a Cloud KMS ML-DSA-65 post-quantum key."""
+    """
+    Verify a document signature using a Cloud KMS ML-DSA-65
+    post-quantum key.
+    """
 
     document = Path(input_path)
     if not document.exists():
@@ -129,6 +127,17 @@ def sign_document(
     print(f"[INFO] Reading document: {input_path}")
     content = document.read_bytes()
     print(f"[INFO] Document size: {len(content)} bytes")
+
+    signature_file = Path(sig_path)
+    if not signature_file.exists():
+        print(f"[ERROR] Signature file not found: {sig_path}")
+        sys.exit(1)
+
+    print(
+        f"[INFO] Reading signature: {sig_path} "
+        f"({signature_file.stat().st_size} bytes)"
+    )
+    signature = signature_file.read_bytes()
 
     payload, is_digest = prepare_payload(content)
 
@@ -147,43 +156,43 @@ def sign_document(
     ).name
     print(f"[INFO] Algorithm: {algorithm}")
 
-    print("[INFO] Signing with KMS...")
-    sign_response = client.asymmetric_sign(
-        request={
-            "name": key_version_name,
-            "data": payload,
-        }
+    print("[INFO] Fetching public key from KMS...")
+    public_key_response = client.get_public_key(
+        request={"name": key_version_name}
     )
+    public_key_pem = public_key_response.pem.encode("utf-8")
+    public_key = load_pem_public_key(public_key_pem)
+    print(f"[INFO] Public key loaded ({len(public_key_pem)} bytes PEM)")
 
-    sig_path = Path(output_path)
-    sig_path.write_bytes(sign_response.signature)
-    print(
-        f"[INFO] Signature saved to: {output_path} "
-        f"({len(sign_response.signature)} bytes)"
-    )
-
-    if is_digest:
+    print("[INFO] Verifying signature locally with public key...")
+    try:
+        public_key.verify(signature, payload)
+        print("[SUCCESS] Signature is VALID! Document integrity confirmed.")
+        if is_digest:
+            print(
+                "[NOTE] Verification covered the SHA-512 digest "
+                "of the original document."
+            )
+    except InvalidSignature:
         print(
-            "[NOTE] Large file: signature covers the SHA-512 digest "
-            "of the document."
+            "[FAILURE] Signature is INVALID! "
+            "The document may have been tampered with."
         )
-        print(
-            "[NOTE] Use verify.py with the original file — "
-            "it applies the same digest logic."
-        )
-
-    print("[SUCCESS] Document signed successfully!")
+        sys.exit(1)
+    except Exception as e:
+        print(f"[ERROR] Verification failed unexpectedly: {e}")
+        sys.exit(1)
 
 
 def main() -> None:
     args = parse_args()
-    sign_document(
+    verify_document(
         project_id=args.project,
         location=args.location,
         keyring_name=args.keyring,
         key_name=args.key,
         input_path=args.input,
-        output_path=args.output,
+        sig_path=args.sig,
     )
 
 
