@@ -19,7 +19,6 @@ provider "google" {
   region  = var.location
 }
 
-# Enable the Cloud KMS API
 resource "google_project_service" "kms" {
   project            = var.project_id
   service            = "cloudkms.googleapis.com"
@@ -39,7 +38,7 @@ resource "google_kms_crypto_key" "pqc_signing_key" {
   purpose  = "ASYMMETRIC_SIGN"
 
   version_template {
-    algorithm        = "PQ_SIGN_ML_DSA_65"
+    algorithm        = "PQ_SIGN_ML_DSA_87"
     protection_level = "SOFTWARE"
   }
 
