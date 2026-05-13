@@ -1,10 +1,10 @@
-# Post-Quantum KMS: Signing and Verifying Documents with ML-DSA-65
+# Post-Quantum KMS: Signing and Verifying Documents with ML-DSA-87
 
 ## Overview
 
-This example demonstrates how to use Google Cloud KMS with a post-quantum cryptographic key (ML-DSA-65) to sign a document and verify its signature, generating a `.sig` file.
+This example demonstrates how to use Google Cloud KMS with a post-quantum cryptographic key (ML-DSA-87) to sign a document and verify its signature, generating a `.sig` file.
 
-ML-DSA-65 (Module Lattice Digital Signature Algorithm, security level 3) is a NIST-standardized post-quantum signature scheme designed to remain secure against attacks from future quantum computers.
+ML-DSA-87 (Module Lattice Digital Signature Algorithm, security level 3) is a NIST-standardized post-quantum signature scheme designed to remain secure against attacks from future quantum computers.
 
 > **Note:** For files larger than 64 KB, both scripts automatically compute a SHA-512 digest of the file and use that as the signing payload, staying within the KMS API limit. The verify script applies the same logic, so both sides always agree on what was signed.
 
@@ -18,7 +18,7 @@ ML-DSA-65 (Module Lattice Digital Signature Algorithm, security level 3) is a NI
 
 **Note:** It is recommended that you create and enable a Python [virtual environment](https://docs.python.org/3/library/venv.html) before running the Python scripts.
 
-## Authenticate with Google Cloud
+### Authenticate with Google Cloud
 
 1. Log in to your Google Cloud account.
     ```sh
@@ -61,7 +61,7 @@ ML-DSA-65 (Module Lattice Digital Signature Algorithm, security level 3) is a NI
     terraform apply
     ```
 
-    **Note:** Review the planned changes and type `yes` to confirm. Terraform will enable the Cloud KMS API, create the key ring, the ML-DSA-65 signing key, and grant the required IAM roles to your user.
+    **Note:** Review the planned changes and type `yes` to confirm. Terraform will enable the Cloud KMS API, create the key ring, the ML-DSA-87 signing key, and grant the required IAM roles to your user.
 
 ## Set Up the Python Environment
 
@@ -108,14 +108,14 @@ ML-DSA-65 (Module Lattice Digital Signature Algorithm, security level 3) is a NI
     [INFO] File exceeds 65536 bytes — signing SHA-512 digest (64 bytes) instead of raw content.
     [INFO] Fetching KMS key version details...
     [INFO] Found ENABLED key version: projects/.../cryptoKeyVersions/1
-    [INFO] Algorithm: PQ_SIGN_ML_DSA_65
+    [INFO] Algorithm: PQ_SIGN_ML_DSA_87
     [INFO] Signing with KMS...
     [INFO] Signature saved to: rfc5126.txt.pdf.sig (3309 bytes)
     [NOTE] Large file: signature covers the SHA-512 digest of the document.
     [SUCCESS] Document signed successfully!
     ```
 
-    **Note:** The `.sig` file contains the raw binary signature produced by the ML-DSA-65 key. Keep both the original document and the `.sig` file to perform verification.
+    **Note:** The `.sig` file contains the raw binary signature produced by the ML-DSA-87 key. Keep both the original document and the `.sig` file to perform verification.
 
 ## Verify the Signature
 
@@ -137,7 +137,7 @@ ML-DSA-65 (Module Lattice Digital Signature Algorithm, security level 3) is a NI
     [INFO] File exceeds 65536 bytes — verifying against SHA-512 digest (64 bytes).
     [INFO] Fetching KMS key version details...
     [INFO] Found ENABLED key version: projects/.../cryptoKeyVersions/1
-    [INFO] Algorithm: PQ_SIGN_ML_DSA_65
+    [INFO] Algorithm: PQ_SIGN_ML_DSA_87
     [INFO] Fetching public key from KMS...
     [INFO] Public key loaded (... bytes PEM)
     [INFO] Verifying signature locally with public key...
