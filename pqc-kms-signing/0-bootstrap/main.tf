@@ -38,7 +38,7 @@ resource "google_kms_crypto_key" "pqc_signing_key" {
   purpose  = "ASYMMETRIC_SIGN"
 
   version_template {
-    algorithm        = "PQ_SIGN_ML_DSA_87"
+    algorithm        = var.algorithm
     protection_level = "SOFTWARE"
   }
 

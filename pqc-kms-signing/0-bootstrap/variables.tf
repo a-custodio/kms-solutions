@@ -36,3 +36,9 @@ variable "key_name" {
   type        = string
   default     = "pqc-signing-key"
 }
+
+variable "algorithm" {
+  description = "The post-quantum signing algorithm for the KMS crypto key."
+  type        = string
+  default     = "PQ_SIGN_ML_DSA_87"
+}
