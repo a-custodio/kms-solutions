@@ -42,3 +42,15 @@ variable "algorithm" {
   type        = string
   default     = "PQ_SIGN_ML_DSA_87"
 }
+
+variable "enable_services" {
+  description = "Controla se os serviços devem ser habilitados."
+  type        = bool
+  default     = true
+}
+
+variable "prevent_destroy" {
+  description = "Controla se os recursos podem ser destruídos."
+  type        = bool
+  default     = true
+}
