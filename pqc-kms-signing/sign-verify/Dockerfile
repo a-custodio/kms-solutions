@@ -12,5 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-google-cloud-kms>=2.23.0
-cryptography>=44.0.0
+FROM alpine:latest
+
+RUN apk add --no-cache openssl
+
+RUN openssl list -signature-algorithms | grep -i ml-dsa
+
+WORKDIR /verify
+
+ENTRYPOINT ["openssl", "pkeyutl", "-verify", "-pubin"]

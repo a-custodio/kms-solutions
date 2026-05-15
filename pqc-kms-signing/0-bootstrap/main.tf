@@ -21,6 +21,12 @@ provider "google" {
 
 data "google_client_openid_userinfo" "current" {}
 
+data "google_kms_crypto_key_version" "primary" {
+  crypto_key = module.kms.keys[var.key_name]
+
+  depends_on = [module.kms]
+}
+
 resource "google_project_service" "kms" {
   count              = var.enable_services ? 1 : 0
   project            = var.project_id
@@ -40,7 +46,9 @@ module "kms" {
 
   key_algorithm        = var.algorithm
   key_protection_level = "SOFTWARE"
-  # key_purpose          = "ASYMMETRIC_SIGN"
+  purpose              = "ASYMMETRIC_SIGN"
+
+  key_rotation_period = ""
 
   set_owners_for = [var.key_name]
   owners         = ["user:${data.google_client_openid_userinfo.current.email}"]

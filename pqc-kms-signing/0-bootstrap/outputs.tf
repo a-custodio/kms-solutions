@@ -38,3 +38,8 @@ output "key_name" {
   description = "The name of the post-quantum signing key."
   value       = var.key_name
 }
+
+output "kms_key_uri" {
+  description = "KMS key URI in tink-go format"
+  value       = "gcp-kms://${data.google_kms_crypto_key_version.primary.name}"
+}
