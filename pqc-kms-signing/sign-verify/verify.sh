@@ -60,56 +60,56 @@ KEYRING=$(echo "$KMS_RESOURCE"  | cut -d'/' -f6)
 KEY=$(echo "$KMS_RESOURCE"      | cut -d'/' -f8)
 VERSION=$(echo "$KMS_RESOURCE"  | cut -d'/' -f10)
 
-echo "Verifying ML-DSA-87 signature..."
-echo "  File      : $PDF_FILE"
-echo "  Signature : $SIG_FILE"
-echo "  Project   : $PROJECT"
-echo "  Location  : $LOCATION"
-echo "  Key Ring  : $KEYRING"
-echo "  Key       : $KEY"
-echo "  Version   : $VERSION"
-echo ""
-
-WORK_DIR=$(mktemp -d /tmp/ml_dsa_verify_XXXXXX)
-PUB_KEY_FILE="$WORK_DIR/pubkey.pem"
-trap 'rm -rf "$WORK_DIR"' EXIT
-
-echo "Exporting public key from KMS..."
-gcloud kms keys versions get-public-key "$VERSION" \
+ALGORITHM=$(gcloud kms keys versions describe "$VERSION" \
   --project="$PROJECT" \
   --location="$LOCATION" \
   --keyring="$KEYRING" \
   --key="$KEY" \
-  --output-file="$PUB_KEY_FILE"
+  --format="value(algorithm)")
 
-echo "  Public key saved to: $PUB_KEY_FILE"
+cat <<EOF
+Verifying $ALGORITHM signature...
+  File      : $PDF_FILE
+  Signature : $SIG_FILE
+  Project   : $PROJECT
+  Location  : $LOCATION
+  Key Ring  : $KEYRING
+  Key       : $KEY
+  Version   : $VERSION
+
+EOF
+
+echo "Exporting public key from KMS..."
+PUB_KEY=$(gcloud kms keys versions get-public-key "$VERSION" \
+  --project="$PROJECT" \
+  --location="$LOCATION" \
+  --keyring="$KEYRING" \
+  --key="$KEY" \
+  --format="value(pem)")
 echo ""
 
-cp "$PDF_FILE" "$WORK_DIR/document.pdf"
-cp "$SIG_FILE" "$WORK_DIR/document.sig"
+echo "Verifying with OpenSSL (alpine/openssl:latest)..."
+WORK_DIR=$(mktemp -d /tmp/ml_dsa_verify_XXXXXX)
+trap 'rm -rf "$WORK_DIR"' EXIT
+echo "$PUB_KEY" > "$WORK_DIR/pubkey.pem"
 
-DOCKER_IMAGE="ml-dsa-verifier"
-
-if ! docker image inspect "$DOCKER_IMAGE" &>/dev/null; then
-  echo "Building Docker image ($DOCKER_IMAGE) with OpenSSL 3.5 (alpine:latest)..."
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  docker build -t "$DOCKER_IMAGE" "$SCRIPT_DIR"
-  echo ""
-fi
-
-echo "Verifying with OpenSSL 3.5 (alpine:latest Docker container)..."
-
-if docker run --rm \
-  -v "$WORK_DIR:/verify" \
-  "$DOCKER_IMAGE" \
+VERIFY_RESULT=$(docker run --rm \
+  -v "$WORK_DIR/pubkey.pem:/verify/pubkey.pem:ro" \
+  -v "$(realpath "$PDF_FILE"):/verify/document.pdf:ro" \
+  -v "$(realpath "$SIG_FILE"):/verify/document.sig:ro" \
+  --entrypoint openssl \
+  alpine/openssl:latest \
+  pkeyutl -verify -pubin \
   -inkey /verify/pubkey.pem \
   -sigfile /verify/document.sig \
-  -in /verify/document.pdf; then
-  echo ""
+  -in /verify/document.pdf \
+  2>&1 || true)
+
+if echo "$VERIFY_RESULT" | grep -q "Signature Verified Successfully"; then
   echo "Signature is VALID!"
   exit 0
 else
-  echo ""
   echo "Signature is INVALID!"
+  echo "Details: $VERIFY_RESULT"
   exit 1
 fi
