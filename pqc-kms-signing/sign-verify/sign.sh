@@ -47,17 +47,26 @@ KEYRING=$(echo "$KMS_RESOURCE"  | cut -d'/' -f6)
 KEY=$(echo "$KMS_RESOURCE"      | cut -d'/' -f8)
 VERSION=$(echo "$KMS_RESOURCE"  | cut -d'/' -f10)
 
+ALGORITHM=$(gcloud kms keys versions describe "$VERSION" \
+  --project="$PROJECT" \
+  --location="$LOCATION" \
+  --keyring="$KEYRING" \
+  --key="$KEY" \
+  --format="value(algorithm)")
+
 SIG_FILE="${PDF_FILE%.pdf}.sig"
 
-echo "Signing file with ML-DSA-87 via GCP KMS..."
-echo "  File     : $PDF_FILE"
-echo "  Project  : $PROJECT"
-echo "  Location : $LOCATION"
-echo "  Key Ring : $KEYRING"
-echo "  Key      : $KEY"
-echo "  Version  : $VERSION"
-echo "  Output   : $SIG_FILE"
-echo ""
+cat <<EOF
+Signing file with $ALGORITHM via GCP KMS...
+  File      : $PDF_FILE
+  Project   : $PROJECT
+  Location  : $LOCATION
+  Key Ring  : $KEYRING
+  Key       : $KEY
+  Version   : $VERSION
+  Algorithm : $ALGORITHM
+  Output    : $SIG_FILE
+EOF
 
 gcloud kms asymmetric-sign \
   --project="$PROJECT" \
