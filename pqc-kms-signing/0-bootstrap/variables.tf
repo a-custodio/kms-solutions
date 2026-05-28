@@ -54,3 +54,21 @@ variable "prevent_destroy" {
   type        = bool
   default     = true
 }
+
+variable "key_protection_level" {
+  description = "The protection level to use when creating a version based on this template. Default value: SOFTWARE."
+  type        = string
+  default     = "SOFTWARE"
+}
+
+variable "purpose" {
+  description = "The immutable purpose of the CryptoKey. Default value: ASYMMETRIC_SIGN."
+  type        = string
+  default     = "ASYMMETRIC_SIGN"
+}
+
+variable "key_rotation_period" {
+  description = "The period of time that should elapse between automatic rotations of a key. It must be at least 24 hours."
+  type        = string
+  default     = ""
+}
