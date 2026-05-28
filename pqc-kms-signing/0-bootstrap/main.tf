@@ -45,10 +45,10 @@ module "kms" {
   prevent_destroy = var.prevent_destroy
 
   key_algorithm        = var.algorithm
-  key_protection_level = "SOFTWARE"
-  purpose              = "ASYMMETRIC_SIGN"
+  key_protection_level = var.key_protection_level
+  purpose              = var.purpose
 
-  key_rotation_period = ""
+  key_rotation_period = var.key_rotation_period
 
   set_owners_for = [var.key_name]
   owners         = ["user:${data.google_client_openid_userinfo.current.email}"]
