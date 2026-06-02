@@ -14,25 +14,12 @@
  * limitations under the License.
  */
 
-variable "project_id" {
-  description = "The Google Cloud project ID where KMS resources will be created."
-  type        = string
-}
+module "pqc_signing" {
+  source = "../../pqc-kms-signing/0-bootstrap"
 
-variable "location" {
-  description = "The Google Cloud location for the KMS key ring."
-  type        = string
-  default     = "us-east1"
-}
-
-variable "keyring_name" {
-  description = "The name of the KMS key ring."
-  type        = string
-  default     = "pqc-keyring"
-}
-
-variable "key_name" {
-  description = "The name of the post-quantum signing key."
-  type        = string
-  default     = "pqc-signing-key"
+  project_id      = var.project_id
+  location        = var.location
+  keyring_name    = var.keyring_name
+  key_name        = var.key_name
+  prevent_destroy = var.prevent_destroy
 }
