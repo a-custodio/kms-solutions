@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pqc_kms_signing
+package pqr_kms_signing
 
 import (
 	"fmt"
@@ -26,12 +26,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPQCSigningModule(t *testing.T) {
+func TestPQRSigningModule(t *testing.T) {
 	randID := random.UniqueId()
-	keyringName := fmt.Sprintf("pqc-test-keyring-%s", randID)
-	keyName := fmt.Sprintf("pqc-test-key-%s", randID)
+	keyringName := fmt.Sprintf("pqr-test-keyring-%s", randID)
+	keyName := fmt.Sprintf("pqr-test-key-%s", randID)
 
-	pqcT := tft.NewTFBlueprintTest(t,
+	pqrT := tft.NewTFBlueprintTest(t,
 		tft.WithVars(map[string]interface{}{
 			"project_id":      "pqs-standalone-deploy",
 			"keyring_name":    keyringName,
@@ -39,17 +39,17 @@ func TestPQCSigningModule(t *testing.T) {
 			"prevent_destroy": false,
 		}),
 	)
-	pqcT.DefineVerify(func(assert *assert.Assertions) {
-		pqcT.DefaultVerify(assert)
+	pqrT.DefineVerify(func(assert *assert.Assertions) {
+		pqrT.DefaultVerify(assert)
 
-		kmsKeyUri := pqcT.GetStringOutput("kms_key_uri")
+		kmsKeyUri := pqrT.GetStringOutput("kms_key_uri")
 
-		absPath, _ := filepath.Abs("../../../pqc-kms-signing/sign-verify")
+		absPath, _ := filepath.Abs("../../../pqr-kms-signing/sign-verify")
 		signScript := filepath.Join(absPath, "sign.sh")
 		verifyScript := filepath.Join(absPath, "verify.sh")
 		samplePdf := filepath.Join(absPath, "sample.pdf")
 		
-		tmpDir, err := os.MkdirTemp("", "pqc_test")
+		tmpDir, err := os.MkdirTemp("", "pqr_test")
 		assert.NoError(err)
 		defer os.RemoveAll(tmpDir)
 
@@ -89,5 +89,5 @@ func TestPQCSigningModule(t *testing.T) {
 		assert.Error(err, "Verify script should fail on tampered content")
 
 	})
-	pqcT.Test()
+	pqrT.Test()
 }

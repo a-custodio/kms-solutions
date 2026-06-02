@@ -55,8 +55,8 @@ If your operating system does not ship with OpenSSL 3.5+ (e.g. older Ubuntu vers
     ```hcl
     project_id   = "YOUR_PROJECT_ID"
     location     = "us-east1"
-    keyring_name = "pqc-keyring"
-    key_name     = "pqc-signing-key"
+    keyring_name = "pqr-keyring"
+    key_name     = "pqr-signing-key"
     ```
 
 1. Initialize and apply Terraform.
@@ -102,8 +102,8 @@ If your operating system does not ship with OpenSSL 3.5+ (e.g. older Ubuntu vers
       File     : sample.pdf
       Project  : YOUR_PROJECT_ID
       Location : us-east1
-      Key Ring : pqc-keyring
-      Key      : pqc-signing-key
+      Key Ring : pqr-keyring
+      Key      : pqr-signing-key
       Version  : 1
       Output   : sample.sig
 
@@ -147,8 +147,8 @@ The Docker image is built automatically on the first run and reused on subsequen
       Signature : sample.sig
       Project   : YOUR_PROJECT_ID
       Location  : us-east1
-      Key Ring  : pqc-keyring
-      Key       : pqc-signing-key
+      Key Ring  : pqr-keyring
+      Key       : pqr-signing-key
       Version   : 1
 
     Exporting public key from KMS...

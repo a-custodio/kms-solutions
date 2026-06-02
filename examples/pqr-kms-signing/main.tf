@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-project_id   = "YOUR-PROJECT-ID"
-location     = "us-east1"
-keyring_name = "pqc-keyring"
-key_name     = "pqc-signing-key"
+module "pqr_signing" {
+  source = "../../pqr-kms-signing/0-bootstrap"
+
+  project_id      = var.project_id
+  location        = var.location
+  keyring_name    = var.keyring_name
+  key_name        = var.key_name
+  prevent_destroy = var.prevent_destroy
+}

@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-module "pqc_signing" {
-  source = "../../pqc-kms-signing/0-bootstrap"
+terraform {
+  required_version = ">= 1.5.7"
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = ">= 6.0, < 8"
+    }
+  }
 
-  project_id      = var.project_id
-  location        = var.location
-  keyring_name    = var.keyring_name
-  key_name        = var.key_name
-  prevent_destroy = var.prevent_destroy
+  provider_meta "google" {
+    module_name = "blueprints/terraform/kms-solutions:pqr-kms-signing-bootstrap/v0.1.0"
+  }
 }
