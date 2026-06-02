@@ -16,7 +16,7 @@
 
 output "kms_key_uri" {
   description = "KMS key URI in tink-go format"
-  value       = module.pqc_signing.kms_key_uri
+  value       = module.pqr_signing.kms_key_uri
 }
 
 output "project_id" {

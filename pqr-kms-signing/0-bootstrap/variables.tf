@@ -28,17 +28,47 @@ variable "location" {
 variable "keyring_name" {
   description = "The name of the KMS key ring."
   type        = string
-  default     = "pqc-keyring"
+  default     = "pqr-keyring"
 }
 
 variable "key_name" {
   description = "The name of the post-quantum signing key."
   type        = string
-  default     = "pqc-signing-key"
+  default     = "pqr-signing-key"
+}
+
+variable "algorithm" {
+  description = "The post-quantum signing algorithm for the KMS crypto key."
+  type        = string
+  default     = "PQ_SIGN_ML_DSA_87"
+}
+
+variable "enable_services" {
+  description = "Whether to enable the necessary Google Cloud services."
+  type        = bool
+  default     = true
 }
 
 variable "prevent_destroy" {
   description = "Whether to prevent destruction of the KMS key."
   type        = bool
-  default     = false
+  default     = true
+}
+
+variable "key_protection_level" {
+  description = "The protection level to use when creating a version based on this template. Default value: SOFTWARE."
+  type        = string
+  default     = "SOFTWARE"
+}
+
+variable "purpose" {
+  description = "The immutable purpose of the CryptoKey. Default value: ASYMMETRIC_SIGN."
+  type        = string
+  default     = "ASYMMETRIC_SIGN"
+}
+
+variable "key_rotation_period" {
+  description = "The period of time that should elapse between automatic rotations of a key. It must be at least 24 hours."
+  type        = string
+  default     = ""
 }
