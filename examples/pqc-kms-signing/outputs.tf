@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-module "pqc_signing" {
-  source = "../../pqc-kms-signing/0-bootstrap"
+output "kms_key_uri" {
+  description = "KMS key URI in tink-go format"
+  value       = module.pqc_signing.kms_key_uri
+}
 
-  project_id   = var.project_id
-  location     = var.location
-  keyring_name = var.keyring_name
-  key_name     = var.key_name
+output "project_id" {
+  description = "The ID of the project"
+  value       = var.project_id
 }
