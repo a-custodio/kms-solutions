@@ -33,7 +33,6 @@ func TestPQRSigningModule(t *testing.T) {
 
 	pqrT := tft.NewTFBlueprintTest(t,
 		tft.WithVars(map[string]interface{}{
-			"project_id":      "pqs-standalone-deploy",
 			"keyring_name":    keyringName,
 			"key_name":        keyName,
 			"prevent_destroy": false,
