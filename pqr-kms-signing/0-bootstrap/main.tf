@@ -21,6 +21,11 @@ provider "google" {
 
 data "google_client_openid_userinfo" "current" {}
 
+locals {
+  caller_is_service_account = can(regex("\\.gserviceaccount\\.com$", data.google_client_openid_userinfo.current.email))
+  caller_member             = "${local.caller_is_service_account ? "serviceAccount" : "user"}:${data.google_client_openid_userinfo.current.email}"
+}
+
 data "google_kms_crypto_key_version" "primary" {
   crypto_key = module.kms.keys[var.key_name]
 
@@ -51,7 +56,7 @@ module "kms" {
   key_rotation_period = var.key_rotation_period
 
   set_owners_for = [var.key_name]
-  owners         = ["user:${data.google_client_openid_userinfo.current.email}"]
+  owners         = [local.caller_member]
 
   depends_on = [google_project_service.kms]
 }
@@ -59,11 +64,11 @@ module "kms" {
 resource "google_kms_crypto_key_iam_member" "signer_verifier" {
   crypto_key_id = module.kms.keys[var.key_name]
   role          = "roles/cloudkms.signerVerifier"
-  member        = "user:${data.google_client_openid_userinfo.current.email}"
+  member        = local.caller_member
 }
 
 resource "google_kms_crypto_key_iam_member" "public_key_viewer" {
   crypto_key_id = module.kms.keys[var.key_name]
   role          = "roles/cloudkms.publicKeyViewer"
-  member        = "user:${data.google_client_openid_userinfo.current.email}"
+  member        = local.caller_member
 }
